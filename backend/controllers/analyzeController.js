@@ -1,5 +1,6 @@
 const pdf = require("pdf-parse");
 const { queryHuggingFace } = require("../utils/huggingface");
+const { removeStopWords } = require("../utils/stopWords");
 
 async function analyze(req, res) {
   try {
@@ -54,8 +55,12 @@ async function analyze(req, res) {
 
       const similarity = dot / (normA * normB);
 
-      const jdWords = jobDescription.toLowerCase().split(/\W+/).filter(Boolean);
-      const resumeWords = resumeText.toLowerCase().split(/\W+/);
+      const jdWords = removeStopWords(
+        jobDescription.toLowerCase().split(/\W+/).filter(Boolean)
+      );
+      const resumeWords = removeStopWords(
+        resumeText.toLowerCase().split(/\W+/)
+      );
       const matchedKeywords = jdWords.filter((word) =>
         resumeWords.includes(word)
       );
