@@ -5,7 +5,7 @@ import { FaFileUpload, FaClipboardList, FaRobot } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { Colors } from "../styles/colors";
 
-const Page = () => {
+export default function AnalyzePage() {
   const [file, setFile] = useState<File | null>(null);
   const [jd, setJd] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,28 +13,48 @@ const Page = () => {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    console.log("📥 Form submitted");
+
     if (!file && !jd.trim()) {
+      console.warn("⚠️ No resume or job description provided");
       alert("Upload resume or enter job description");
       return;
     }
 
     const fd = new FormData();
-    if (file) fd.append("resume", file);
-    fd.append("jobDescription", jd);
+    if (file) {
+      fd.append("file", file);
+      console.log(`📂 File appended: ${file.name}`);
+    }
+    if (jd.trim()) {
+      fd.append("jobDescription", jd);
+      console.log("📝 Job description appended");
+    }
 
     setLoading(true);
     setResult(null);
+    console.log("⏳ Analyzing started, loading state set");
 
     try {
+      console.log("🚀 Sending request to /api/analyze...");
       const res = await fetch("/api/analyze", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Failed to analyze");
+
+      if (!res.ok) {
+        console.error("❌ API request failed with status:", res.status);
+        throw new Error("Failed to analyze");
+      }
+
+      console.log("✅ API response received");
       const json = await res.json();
+      console.log("📊 Analysis result:", json);
+
       setResult(json);
-    } catch (err) {
-      console.error(err);
-      alert("Error analyzing");
+    } catch (err: any) {
+      console.error("🚨 Error analyzing:", err.message);
+      alert("Error analyzing: " + err.message);
     } finally {
       setLoading(false);
+      console.log("🏁 Analysis finished, loading state reset");
     }
   }
 
@@ -64,6 +84,7 @@ const Page = () => {
         className="shadow-lg rounded-2xl p-6 mt-10 w-full max-w-xl space-y-5"
         style={{ backgroundColor: Colors.background.white }}
       >
+        {/* Resume Upload */}
         <label className="block">
           <span
             className="flex items-center gap-2 font-medium"
@@ -82,8 +103,14 @@ const Page = () => {
             }}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
+          {file && (
+            <p className="mt-2 text-sm" style={{ color: Colors.text.medium }}>
+              Selected: {file.name}
+            </p>
+          )}
         </label>
 
+        {/* Job Description */}
         <label className="block">
           <span
             className="flex items-center gap-2 font-medium"
@@ -105,6 +132,7 @@ const Page = () => {
           />
         </label>
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
@@ -173,6 +201,4 @@ const Page = () => {
       )}
     </main>
   );
-};
-
-export default Page;
+}
