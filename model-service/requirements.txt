@@ -1,0 +1,21 @@
+fastapi
+uvicorn
+transformers
+torch
+pydantic
+
+
+# Web framework
+# fastapi>=0.110.0
+# uvicorn[standard]>=0.29.0
+
+# ML / Hugging Face
+# transformers>=4.40.0
+# torch>=2.2.0
+
+# Data validation
+# pydantic>=2.7.0
+
+# Optional: useful extras
+# python-multipart   # if later you want to upload files (PDF, DOCX)
+# gunicorn           # alternative production server

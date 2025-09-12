@@ -1,8 +1,8 @@
-async function queryHuggingFace(model, text) {
-  console.log("Querying Hugging Face model:", model);
-  console.log("Text length:", text);
+async function queryHuggingFace(model, text, features) {
   const response = await fetch(
-    `https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction`,
+    `https://router.huggingface.co/hf-inference/models/${model}/pipeline/${
+      features || "feature-extraction"
+    }`,
     {
       method: "POST",
       headers: {
@@ -14,8 +14,6 @@ async function queryHuggingFace(model, text) {
   );
 
   const data = await response.json();
-  console.log("Hugging Face response data:", data);
-
   if (Array.isArray(data[0])) {
     return [{ embedding: data[0] }];
   }
@@ -23,4 +21,19 @@ async function queryHuggingFace(model, text) {
   return data;
 }
 
-module.exports = { queryHuggingFace };
+async function queryNER(text) {
+  const response = await fetch("http://localhost:8000/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`NER API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.entities;
+}
+
+module.exports = { queryHuggingFace, queryNER };
