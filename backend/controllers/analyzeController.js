@@ -24,12 +24,6 @@ async function analyze(req, res) {
     if (resumeText && jobDescription) {
       // const embeddingModel = "sentence-transformers/all-mpnet-base-v2"; // 🔹 better semantic accuracy
       const embeddingModel = "sentence-transformers/all-MiniLM-L6-v2";
-      // Run embeddings + NER in parallel
-      // const [resumeRaw, jdRaw, nerEntities] = await Promise.all([
-      //   queryHuggingFace(embeddingModel, resumeText, "feature-extraction"),
-      //   queryHuggingFace(embeddingModel, jobDescription, "feature-extraction"),
-      //   queryNER(resumeText),
-      // ]);
 
       const resumeRaw = await queryHuggingFace(embeddingModel, resumeText);
       const jdRaw = await queryHuggingFace(embeddingModel, jobDescription);

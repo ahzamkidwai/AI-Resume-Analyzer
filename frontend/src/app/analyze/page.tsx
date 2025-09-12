@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FaFileUpload, FaClipboardList, FaRobot } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { Colors } from "../styles/colors";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AnalyzePage() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,14 +14,18 @@ export default function AnalyzePage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    console.log("📥 Form submitted");
 
-    if (!file && !jd.trim()) {
+    if (file === null) {
       console.warn("⚠️ No resume or job description provided");
-      alert("Upload resume or enter job description");
+      alert("Upload resume ");
       return;
     }
 
+    if (jd.trim().length === 0) {
+      alert("Upload job description ");
+      return;
+    }
+    console.log("file file file : ", file);
     const fd = new FormData();
     if (file) {
       fd.append("file", file);
@@ -28,6 +33,7 @@ export default function AnalyzePage() {
     }
     if (jd.trim()) {
       fd.append("jobDescription", jd);
+      console.log("file file file : ", file);
       console.log("📝 Job description appended");
     }
 
@@ -168,56 +174,60 @@ export default function AnalyzePage() {
             Analysis Results
           </h2>
 
-          {/* Similarity Score */}
-          <div>
-            <strong style={{ color: Colors.text.dark }}>Match Score: </strong>
-            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-              <div
-                className="h-4 rounded-full text-xs flex items-center justify-center text-white font-medium"
-                style={{
-                  width: `${(result.similarity * 100).toFixed(0)}%`,
-                  backgroundColor:
-                    result.similarity > 0.7
-                      ? Colors.success.DEFAULT
-                      : result.similarity > 0.4
-                      ? Colors.warning.DEFAULT
-                      : Colors.danger.DEFAULT,
-                }}
-              >
-                {(result.similarity * 100).toFixed(0)}%
+          {/* Accordion - Match Score */}
+          <Accordion title="Match Score" defaultOpen={true}>
+            <div>
+              {/* <strong style={{ color: Colors.text.dark }}>Match Score: </strong> */}
+              <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
+                <div
+                  className="h-4 rounded-full text-xs flex items-center justify-center text-white font-medium"
+                  style={{
+                    width: `${(result.similarity * 100).toFixed(0)}%`,
+                    backgroundColor:
+                      result.similarity > 0.7
+                        ? Colors.success.DEFAULT
+                        : result.similarity > 0.4
+                        ? Colors.warning.DEFAULT
+                        : Colors.danger.DEFAULT,
+                  }}
+                >
+                  {(result.similarity * 100).toFixed(0)}%
+                </div>
               </div>
             </div>
-          </div>
+          </Accordion>
 
-          {/* Matched Keywords */}
-          <div>
-            <strong style={{ color: Colors.text.dark }}>
-              Matched Keywords:
-            </strong>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {Array.isArray(result.matchedKeywords) &&
-              result.matchedKeywords.length > 0 ? (
-                result.matchedKeywords.map((kw: string, idx: number) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 rounded-full text-sm font-medium"
-                    style={{
-                      backgroundColor: Colors.primary.light,
-                      color: Colors.primary.dark,
-                    }}
-                  >
-                    {kw}
+          {/* Accordion - Matched Keywords */}
+          <Accordion title="Matched Keywords">
+            <div>
+              {/* <strong style={{ color: Colors.text.dark }}>
+                Matched Keywords:
+              </strong> */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {Array.isArray(result.matchedKeywords) &&
+                result.matchedKeywords.length > 0 ? (
+                  result.matchedKeywords.map((kw: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-full text-sm font-medium"
+                      style={{
+                        backgroundColor: Colors.primary.light,
+                        color: Colors.primary.dark,
+                      }}
+                    >
+                      {kw}
+                    </span>
+                  ))
+                ) : (
+                  <span style={{ color: Colors.text.medium }}>
+                    No keywords matched
                   </span>
-                ))
-              ) : (
-                <span style={{ color: Colors.text.medium }}>
-                  No keywords matched
-                </span>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          </Accordion>
 
-          {/* Insights (Optional) */}
+          {/* Insights */}
           <div
             className="pt-3 border-t"
             style={{ borderColor: Colors.border.DEFAULT }}
@@ -231,5 +241,52 @@ export default function AnalyzePage() {
         </section>
       )}
     </main>
+  );
+}
+
+function Accordion({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border rounded-xl overflow-hidden">
+      {/* Header */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center px-4 py-3 font-semibold text-left"
+        style={{ color: Colors.text.dark }}
+      >
+        {title}
+        <motion.span
+          animate={{ rotate: isOpen ? 90 : 0 }}
+          transition={{ duration: 0.3 }}
+          className="ml-2"
+        >
+          ▶
+        </motion.span>
+      </button>
+
+      {/* Animated Content */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="px-4 pb-4"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
