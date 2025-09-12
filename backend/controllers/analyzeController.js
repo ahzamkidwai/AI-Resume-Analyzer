@@ -83,6 +83,7 @@
 const { queryHuggingFace, queryNER } = require("../utils/huggingface");
 const { removeStopWords } = require("../utils/stopWords");
 const pdf = require("pdf-parse");
+const { synonyms } = require("../utils/synonyms");
 
 async function analyze(req, res) {
   try {
@@ -103,37 +104,42 @@ async function analyze(req, res) {
     }
 
     if (resumeText && jobDescription) {
+      // const embeddingModel = "sentence-transformers/all-mpnet-base-v2"; // 🔹 better semantic accuracy
       const embeddingModel = "sentence-transformers/all-MiniLM-L6-v2";
-      const resumeRaw = await queryHuggingFace(
-        embeddingModel,
-        resumeText,
-        "feature-extraction"
-      );
-      const jdRaw = await queryHuggingFace(
-        embeddingModel,
-        jobDescription,
-        "feature-extraction"
-      );
+      // Run embeddings + NER in parallel
+      const [resumeRaw, jdRaw, nerEntities] = await Promise.all([
+        queryHuggingFace(embeddingModel, resumeText, "feature-extraction"),
+        queryHuggingFace(embeddingModel, jobDescription, "feature-extraction"),
+        queryNER(resumeText),
+      ]);
 
       const resumeVec = getEmbeddingVector(resumeRaw);
       const jdVec = getEmbeddingVector(jdRaw);
 
       const similarity = cosineSimilarity(resumeVec, jdVec);
-      const nerEntities = await queryNER(resumeText);
 
-      const jdWords = removeStopWords(
-        jobDescription.toLowerCase().split(/\W+/).filter(Boolean)
-      );
-      const resumeWords = removeStopWords(
-        resumeText.toLowerCase().split(/\W+/)
-      );
+      // 🔹 Keyword preprocessing with stopwords + synonyms
+      let jdWords = preprocessKeywords(jobDescription);
+      let resumeWords = preprocessKeywords(resumeText);
+
       const matchedKeywords = jdWords.filter((word) =>
         resumeWords.includes(word)
       );
+      const missingKeywords = jdWords.filter(
+        (word) => !resumeWords.includes(word)
+      );
+
+      // 🔹 Compute weighted score (50% cosine, 50% keyword overlap)
+      const keywordScore =
+        jdWords.length > 0 ? matchedKeywords.length / jdWords.length : 0;
+      const finalScore = (similarity * 0.5 + keywordScore * 0.5) * 100;
 
       return res.json({
-        similarity,
+        similarity: similarity.toFixed(4),
+        keywordScore: keywordScore.toFixed(4),
+        finalScore: finalScore.toFixed(2) + "%",
         matchedKeywords,
+        missingKeywords,
         entities: nerEntities,
       });
     }
@@ -145,6 +151,18 @@ async function analyze(req, res) {
   }
 }
 
+// 🔹 Helper: preprocess keywords (normalize + remove stopwords + expand synonyms)
+function preprocessKeywords(text) {
+  return removeStopWords(
+    text
+      .toLowerCase()
+      .split(/\W+/)
+      .filter(Boolean)
+      .map((w) => synonyms[w] || w) // synonym expansion
+  );
+}
+
+// Mean pooling for token embeddings
 function meanPooling(tokenEmbeddings) {
   if (!Array.isArray(tokenEmbeddings) || tokenEmbeddings.length === 0) {
     throw new Error(
@@ -160,27 +178,17 @@ function meanPooling(tokenEmbeddings) {
 }
 
 function getEmbeddingVector(raw) {
-  // Accept many shapes and return a single vector: [number, number, ...]
-  // raw can be:
-  //  - [num, num, ...]  => already a vector
-  //  - [[num...], [num...], ...] => token embeddings -> mean pool
-  //  - [{ embedding: [...] }] => return first.embedding
-  //  - { embedding: [...] } => return embedding
   if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === "number") {
-    // already a vector
-    return raw;
+    return raw; // already a vector
   }
-
   if (
     Array.isArray(raw) &&
     raw.length > 0 &&
     Array.isArray(raw[0]) &&
     typeof raw[0][0] === "number"
   ) {
-    // token-level embeddings: array of vectors -> mean pool
     return meanPooling(raw);
   }
-
   if (
     Array.isArray(raw) &&
     raw.length > 0 &&
@@ -189,18 +197,10 @@ function getEmbeddingVector(raw) {
   ) {
     return raw[0].embedding;
   }
-
   if (raw && Array.isArray(raw.embedding)) {
     return raw.embedding;
   }
-
-  // If your queryHuggingFace returns something like {0: [...], 1: [...]} (unusual) you may need to adapt here.
-  throw new Error(
-    "Unsupported embedding shape from queryHuggingFace: " +
-      JSON.stringify(
-        Array.isArray(raw) ? (raw.length > 3 ? raw.slice(0, 3) : raw) : raw
-      ).slice(0, 400)
-  );
+  throw new Error("Unsupported embedding shape from queryHuggingFace");
 }
 
 function cosineSimilarity(vecA, vecB) {
@@ -212,9 +212,6 @@ function cosineSimilarity(vecA, vecB) {
       `Embedding dims mismatch: ${vecA.length} vs ${vecB.length}`
     );
   }
-
-  console.log("Vector A length:", vecA.length);
-  console.log("Vector B length:", vecB.length);
 
   let dot = 0;
   let normA = 0;
@@ -228,7 +225,7 @@ function cosineSimilarity(vecA, vecB) {
   normA = Math.sqrt(normA);
   normB = Math.sqrt(normB);
 
-  if (normA === 0 || normB === 0) return 0; // avoid divide-by-zero
+  if (normA === 0 || normB === 0) return 0;
   return dot / (normA * normB);
 }
 
