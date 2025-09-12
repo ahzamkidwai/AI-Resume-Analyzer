@@ -16,72 +16,59 @@ export default function AnalyzePage() {
     e.preventDefault();
 
     if (file === null) {
-      console.warn("⚠️ No resume or job description provided");
-      alert("Upload resume ");
+      alert("Upload resume");
+      return;
+    }
+    if (jd.trim().length === 0) {
+      alert("Upload job description");
       return;
     }
 
-    if (jd.trim().length === 0) {
-      alert("Upload job description ");
-      return;
-    }
-    console.log("file file file : ", file);
     const fd = new FormData();
-    if (file) {
-      fd.append("file", file);
-      console.log(`📂 File appended: ${file.name}`);
-    }
-    if (jd.trim()) {
-      fd.append("jobDescription", jd);
-      console.log("file file file : ", file);
-      console.log("📝 Job description appended");
-    }
+    if (file) fd.append("file", file);
+    if (jd.trim()) fd.append("jobDescription", jd);
 
     setLoading(true);
     setResult(null);
-    console.log("⏳ Analyzing started, loading state set");
 
     try {
-      console.log("🚀 Sending request to /api/analyze...");
       const res = await fetch("http://localhost:5000/api/analyze", {
         method: "POST",
         body: fd,
       });
 
-      if (!res.ok) {
-        console.error("❌ API request failed with status:", res.status);
-        throw new Error("Failed to analyze");
-      }
+      if (!res.ok) throw new Error("Failed to analyze");
 
-      console.log("✅ API response received");
       const json = await res.json();
-      console.log("📊 Analysis result:", json);
-
       setResult(json);
     } catch (err: any) {
-      console.error("🚨 Error analyzing:", err.message);
       alert("Error analyzing: " + err.message);
     } finally {
       setLoading(false);
-      console.log("🏁 Analysis finished, loading state reset");
     }
   }
 
   return (
     <main
-      className="min-h-screen font-sans flex flex-col items-center p-6"
+      className="min-h-screen font-sans flex flex-col items-center px-4 sm:px-6 lg:px-12 py-8"
       style={{ backgroundColor: Colors.background.light }}
     >
       {/* Hero Section */}
-      <section className="text-center max-w-2xl mt-12">
+      <section className="text-center max-w-2xl mt-8 sm:mt-12">
         <FaRobot
-          className="text-6xl mx-auto mb-4"
+          className="text-5xl sm:text-6xl mx-auto mb-4"
           style={{ color: Colors.primary.DEFAULT }}
         />
-        <h1 className="text-4xl font-bold" style={{ color: Colors.text.dark }}>
+        <h1
+          className="text-2xl sm:text-4xl font-bold"
+          style={{ color: Colors.text.dark }}
+        >
           AI Resume & Job Match Analyzer
         </h1>
-        <p className="mt-2 text-lg" style={{ color: Colors.text.medium }}>
+        <p
+          className="mt-3 text-base sm:text-lg leading-relaxed px-2"
+          style={{ color: Colors.text.medium }}
+        >
           Upload your resume or paste a job description, and let AI analyze the
           match instantly.
         </p>
@@ -90,13 +77,13 @@ export default function AnalyzePage() {
       {/* Form Section */}
       <form
         onSubmit={submit}
-        className="shadow-lg rounded-2xl p-6 mt-10 w-full max-w-xl space-y-5"
+        className="shadow-lg rounded-2xl p-5 sm:p-6 md:p-8 mt-8 sm:mt-10 w-full max-w-md sm:max-w-xl lg:max-w-2xl space-y-5"
         style={{ backgroundColor: Colors.background.white }}
       >
         {/* Resume Upload */}
         <label className="block">
           <span
-            className="flex items-center gap-2 font-medium"
+            className="flex items-center gap-2 font-medium text-sm sm:text-base"
             style={{ color: Colors.text.dark }}
           >
             <FaFileUpload style={{ color: Colors.primary.DEFAULT }} /> Upload
@@ -113,7 +100,10 @@ export default function AnalyzePage() {
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           {file && (
-            <p className="mt-2 text-sm" style={{ color: Colors.text.medium }}>
+            <p
+              className="mt-2 text-xs sm:text-sm"
+              style={{ color: Colors.text.medium }}
+            >
               Selected: {file.name}
             </p>
           )}
@@ -122,7 +112,7 @@ export default function AnalyzePage() {
         {/* Job Description */}
         <label className="block">
           <span
-            className="flex items-center gap-2 font-medium"
+            className="flex items-center gap-2 font-medium text-sm sm:text-base"
             style={{ color: Colors.text.dark }}
           >
             <FaClipboardList style={{ color: Colors.success.DEFAULT }} /> Paste
@@ -133,7 +123,7 @@ export default function AnalyzePage() {
             value={jd}
             onChange={(e) => setJd(e.target.value)}
             placeholder="Paste job description here..."
-            className="mt-2 block w-full border rounded-lg p-3 text-sm focus:ring-2"
+            className="mt-2 block w-full border rounded-lg p-3 text-sm focus:ring-2 resize-none"
             style={{
               borderColor: Colors.border.DEFAULT,
               color: Colors.text.medium,
@@ -145,7 +135,7 @@ export default function AnalyzePage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 font-semibold py-2 px-4 rounded-lg transition text-sm sm:text-base disabled:opacity-50"
           style={{
             backgroundColor: Colors.primary.DEFAULT,
             color: Colors.background.white,
@@ -164,11 +154,11 @@ export default function AnalyzePage() {
       {/* Results */}
       {result && (
         <section
-          className="shadow-md rounded-2xl p-6 mt-8 w-full max-w-xl space-y-4"
+          className="shadow-md rounded-2xl p-5 sm:p-6 md:p-8 mt-8 w-full max-w-md sm:max-w-xl lg:max-w-2xl space-y-4"
           style={{ backgroundColor: Colors.background.white }}
         >
           <h2
-            className="text-xl font-semibold mb-4"
+            className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4"
             style={{ color: Colors.text.dark }}
           >
             Analysis Results
@@ -177,7 +167,6 @@ export default function AnalyzePage() {
           {/* Accordion - Match Score */}
           <Accordion title="Match Score" defaultOpen={true}>
             <div>
-              {/* <strong style={{ color: Colors.text.dark }}>Match Score: </strong> */}
               <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
                 <div
                   className="h-4 rounded-full text-xs flex items-center justify-center text-white font-medium"
@@ -200,16 +189,13 @@ export default function AnalyzePage() {
           {/* Accordion - Matched Keywords */}
           <Accordion title="Matched Keywords">
             <div>
-              {/* <strong style={{ color: Colors.text.dark }}>
-                Matched Keywords:
-              </strong> */}
               <div className="flex flex-wrap gap-2 mt-2">
                 {Array.isArray(result.matchedKeywords) &&
                 result.matchedKeywords.length > 0 ? (
                   result.matchedKeywords.map((kw: string, idx: number) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 rounded-full text-sm font-medium"
+                      className="px-3 py-1 rounded-full text-xs sm:text-sm font-medium"
                       style={{
                         backgroundColor: Colors.primary.light,
                         color: Colors.primary.dark,
@@ -232,7 +218,10 @@ export default function AnalyzePage() {
             className="pt-3 border-t"
             style={{ borderColor: Colors.border.DEFAULT }}
           >
-            <p className="text-sm" style={{ color: Colors.text.medium }}>
+            <p
+              className="text-xs sm:text-sm leading-relaxed"
+              style={{ color: Colors.text.medium }}
+            >
               ✅ High score means your resume aligns well with the job
               description. Aim for at least <strong>70%</strong> for strong ATS
               compatibility.
@@ -260,7 +249,7 @@ function Accordion({
       {/* Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center px-4 py-3 font-semibold text-left"
+        className="w-full flex justify-between items-center px-3 sm:px-4 py-2 sm:py-3 font-semibold text-left text-sm sm:text-base"
         style={{ color: Colors.text.dark }}
       >
         {title}
@@ -281,7 +270,7 @@ function Accordion({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="px-4 pb-4"
+            className="px-3 sm:px-4 pb-3 sm:pb-4"
           >
             {children}
           </motion.div>
