@@ -35,6 +35,10 @@ const synonyms = {
   css: "css",
   tailwind: "tailwindcss",
   bootstrap: "bootstrap",
+  express: "express.js",
+  expressjs: "express.js",
+  jquery: "jquery",
+  ajax: "ajax",
 
   // --- Backend & Frameworks ---
   node: "nodejs",
@@ -136,6 +140,22 @@ const synonyms = {
   postman: "postman",
   figma: "figma",
   miro: "miro",
+
+  amazon: "amazon web services",
+  aws: "amazon web services",
+
+  "firebase hosting": "firebase",
+  "firebase authentication": "firebase",
+  "firebase auth": "firebase",
+  "firebase cloud functions": "firebase",
+  "firebase functions": "firebase",
+  "firebase storage": "firebase",
+  "firebase cloud messaging": "firebase",
+  fcm: "firebase",
+  "firebase push notifications": "firebase",
+  "firebase analytics": "firebase",
+  "firebase crashlytics": "firebase",
+  "firebase test lab": "firebase",
 };
 
 module.exports = { synonyms };

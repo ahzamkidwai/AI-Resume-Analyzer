@@ -10,7 +10,7 @@ export default function AnalyzePage() {
   const [jd, setJd] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  console.log("Matched Keywords:", result?.matchedKeywords);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     console.log("📥 Form submitted");
