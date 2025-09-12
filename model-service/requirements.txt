@@ -1,8 +1,18 @@
+# fastapi
+# uvicorn
+# transformers
+# torch
+# pydantic
+
+
 fastapi
-uvicorn
+uvicorn[standard]
 transformers
 torch
 pydantic
+python-multipart
+accelerate
+
 
 
 # Web framework
