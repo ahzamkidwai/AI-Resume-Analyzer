@@ -32,15 +32,18 @@ npm start
 ```
 
 ## Frontend
-Frontend
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
 ### Model Service
+```bash
 cd model-service
 pip install -r requirements.txt
 python app.py
+```
 
 ### Usage
 
